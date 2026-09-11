@@ -604,6 +604,16 @@
 
     const STORAGE_PREFIX = "ptm_words_";
 
+    function dedupeBank(bank){
+      const seen = new Set();
+      return bank.filter(item => {
+        const key = item.text.trim().toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
     function loadBanks(){
       const result = {};
       ["young", "older"].forEach(key => {
@@ -611,7 +621,7 @@
         if (raw){
           try{
             const parsed = JSON.parse(raw);
-            result[key] = Array.isArray(parsed) ? parsed : DEFAULT_DECKS[key].words.slice();
+            result[key] = Array.isArray(parsed) ? dedupeBank(parsed) : DEFAULT_DECKS[key].words.slice();
           }catch(e){
             result[key] = DEFAULT_DECKS[key].words.slice();
           }
@@ -803,6 +813,14 @@
       const iconInput = document.getElementById('newWordIcon');
       const text = textInput.value.trim();
       if (!text) return;
+
+      const isDuplicate = banks[manageTab].some(
+        item => item.text.trim().toLowerCase() === text.toLowerCase()
+      );
+      if (isDuplicate){
+        alert('"' + text + '" is already in this list.');
+        return;
+      }
 
       const entry = { text: text };
       if (manageTab === 'young' && iconInput.value.trim()){
