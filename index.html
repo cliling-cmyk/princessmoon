@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Princess and the Moon — Pictionary</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #FBF9F5;
+    --ink: #262420;
+    --ink-soft: #6b665c;
+    --line: #E4DFD3;
+    --card: #FFFFFF;
+    --young: #E8735C;
+    --young-tint: #FBEAE6;
+    --older: #2F7A6D;
+    --older-tint: #E6F0EE;
+    --tick: #3F9142;
+    --accent: var(--young);
+    --accent-tint: var(--young-tint);
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin:0; padding:0; height:100%;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+  }
+
+  body{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    padding: 24px;
+  }
+
+  .screen{
+    width:100%;
+    max-width: 640px;
+  }
+
+  [hidden]{ display:none !important; }
+
+  /* ---------- Landing ---------- */
+  #landing{
+    text-align:center;
+  }
+
+  .eyebrow{
+    font-family:'Fredoka', sans-serif;
+    font-weight:500;
+    font-size: 15px;
+    color: var(--ink-soft);
+    letter-spacing: 0.02em;
+    margin: 0 0 6px;
+  }
+
+  h1{
+    font-family:'Fredoka', sans-serif;
+    font-weight:600;
+    font-size: clamp(28px, 6vw, 40px);
+    line-height:1.15;
+    margin: 0 0 40px;
+  }
+
+  .age-choices{
+    display:flex;
+    flex-direction:column;
+    gap: 16px;
+  }
+
+  .age-btn{
+    font-family:'Fredoka', sans-serif;
+    font-weight:600;
+    font-size: 22px;
+    color: var(--ink);
+    background: var(--card);
+    border: 2px solid var(--line);
+    border-radius: 18px;
+    padding: 26px 20px;
+    cursor:pointer;
+    transition: border-color 0.15s ease, transform 0.1s ease;
+  }
+  .age-btn:hover{ transform: translateY(-2px); }
+  .age-btn:active{ transform: translateY(0px); }
+  .age-btn.young:hover{ border-color: var(--young); }
+  .age-btn.older:hover{ border-color: var(--older); }
+
+  .age-btn .sub{
+    display:block;
+    font-family:'Inter', sans-serif;
+    font-weight:400;
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin-top: 4px;
+  }
+
+  /* ---------- Game ---------- */
+  #game{
+    width:100%;
+  }
+
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom: 22px;
+  }
+
+  .change-age{
+    font-family:'Inter', sans-serif;
+    font-size: 14px;
+    font-weight:500;
+    color: var(--ink-soft);
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding: 6px 0;
+  }
+  .change-age:hover{ color: var(--ink); }
+
+  .progress{
+    font-family:'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink-soft);
+  }
+
+  .category-label{
+    font-family:'Fredoka', sans-serif;
+    font-weight:600;
+    font-size: 36px;
+    color: var(--accent);
+    text-align:center;
+    margin-bottom: 18px;
+  }
+
+  .card-wrap{
+    position:relative;
+  }
+
+  .card{
+    position:relative;
+    background: var(--card);
+    border: 2px solid var(--line);
+    border-radius: 24px;
+    min-height: 300px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 40px 28px;
+    text-align:center;
+    overflow:hidden;
+  }
+
+  .card-content{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap: 14px;
+  }
+
+  .icon{
+    font-size: clamp(56px, 14vw, 84px);
+    line-height:1;
+  }
+  .icon:empty{
+    display:none;
+  }
+
+  .word{
+    font-family:'Fredoka', sans-serif;
+    font-weight:600;
+    font-size: clamp(30px, 7vw, 46px);
+    line-height:1.2;
+    color: var(--ink);
+  }
+
+  .done-badge{
+    position:absolute;
+    top: 16px;
+    right: 16px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--tick);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size: 18px;
+    font-weight:700;
+    opacity:0;
+    transform: scale(0.6);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+  }
+  .done-badge.show{
+    opacity:1;
+    transform: scale(1);
+  }
+
+  .tick-overlay{
+    position:absolute;
+    inset:0;
+    background: var(--accent-tint);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    opacity:0;
+    pointer-events:none;
+    transition: opacity 0.18s ease;
+  }
+  .tick-overlay.show{
+    opacity:1;
+    animation: pop 0.7s ease;
+  }
+  @keyframes pop{
+    0%{ transform: scale(0.7); opacity:0; }
+    35%{ transform: scale(1.06); opacity:1; }
+    100%{ transform: scale(1); opacity:1; }
+  }
+  .tick-mark{
+    width: 92px;
+    height: 92px;
+    border-radius: 50%;
+    background: var(--tick);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .tick-mark svg{
+    width: 48px;
+    height: 48px;
+    stroke: #fff;
+    stroke-width: 4;
+    fill:none;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
+
+  .controls{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    margin-top: 22px;
+  }
+
+  .nav-btn{
+    flex: 0 0 auto;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 2px solid var(--line);
+    background: var(--card);
+    font-size: 20px;
+    color: var(--ink);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition: border-color 0.15s ease;
+  }
+  .nav-btn:hover{ border-color: var(--accent); }
+
+  .pass-btn, .correct-btn{
+    flex:1;
+    font-family:'Fredoka', sans-serif;
+    font-weight:600;
+    font-size: 17px;
+    padding: 16px 10px;
+    border-radius: 16px;
+    cursor:pointer;
+    border: 2px solid var(--line);
+    background: var(--card);
+    color: var(--ink);
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .pass-btn:hover{ border-color: var(--ink-soft); }
+
+  .correct-btn{
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .correct-btn:hover{ filter: brightness(1.05); }
+
+  /* ---------- Complete modal ---------- */
+  .modal-overlay{
+    position:fixed;
+    inset:0;
+    background: rgba(38, 36, 32, 0.45);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 24px;
+    z-index: 10;
+  }
+
+  .modal-box{
+    background: var(--card);
+    border-radius: 22px;
+    padding: 36px 30px;
+    max-width: 360px;
+    width:100%;
+    text-align:center;
+  }
+
+  .modal-emoji{
+    font-size: 48px;
+    margin: 0 0 10px;
+  }
+
+  .modal-title{
+    font-family:'Fredoka', sans-serif;
+    font-weight:600;
+    font-size: 22px;
+    color: var(--ink);
+    margin: 0 0 24px;
+  }
+
+  .modal-actions{
+    display:flex;
+    gap: 10px;
+  }
+
+  @media (max-width: 420px){
+    .word{ font-size: clamp(24px, 8vw, 34px); }
+    .nav-btn{ width: 44px; height: 44px; }
+  }
+</style>
+</head>
+<body>
+
+  <div id="landing" class="screen">
+    <p class="eyebrow">The Princess and the Moon</p>
+    <h1>Who's drawing?<br>Pick the age group</h1>
+    <div class="age-choices">
+      <button class="age-btn young" onclick="startGame('young')">
+        Ages 7 and below
+        <span class="sub">10 easy words to draw</span>
+      </button>
+      <button class="age-btn older" onclick="startGame('older')">
+        Ages 7–12
+        <span class="sub">11 trickier words &amp; ideas</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="game" class="screen" hidden>
+    <div class="topbar">
+      <button class="change-age" onclick="goToLanding()">&larr; Change age</button>
+      <span class="progress" id="categoryLabel"></span>
+    </div>
+
+    <p class="category-label" id="progress"></p>
+
+    <div class="card-wrap">
+      <div class="card" id="card">
+        <div class="done-badge" id="doneBadge">&#10003;</div>
+        <div class="card-content">
+          <span class="icon" id="wordIcon"></span>
+          <span class="word" id="wordText"></span>
+        </div>
+        <div class="tick-overlay" id="tickOverlay">
+          <div class="tick-mark">
+            <svg viewBox="0 0 24 24"><polyline points="4,13 10,19 20,6"></polyline></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="nav-btn" onclick="goPrev()" aria-label="Previous card">&#8592;</button>
+      <button class="pass-btn" onclick="passCard()">Pass</button>
+      <button class="correct-btn" onclick="markCorrect()">Got it &#10003;</button>
+      <button class="nav-btn" onclick="goNext()" aria-label="Next card">&#8594;</button>
+    </div>
+  </div>
+
+  <div id="completeModal" class="modal-overlay" hidden>
+    <div class="modal-box">
+      <p class="modal-emoji">🎉</p>
+      <p class="modal-title">All cards have been answered!</p>
+      <div class="modal-actions">
+        <button class="pass-btn" onclick="closeModal()">Review cards</button>
+        <button class="correct-btn" onclick="restartDeck()">Play again</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const decks = {
+      young: {
+        label: "Ages 7 and below",
+        accent: "--young",
+        tint: "--young-tint",
+        words: [
+          { text: "Moon", icon: "🌙" },
+          { text: "Rabbit", icon: "🐰" },
+          { text: "Star", icon: "⭐" },
+          { text: "Crown", icon: "👑" },
+          { text: "Smile", icon: "😊" },
+          { text: "Carrot", icon: "🥕" },
+          { text: "Princess", icon: "👸" },
+          { text: "Ball", icon: "⚽" },
+          { text: "Dancing", icon: "💃" },
+          { text: "Hug", icon: "🤗" }
+        ]
+      },
+      older: {
+        label: "Ages 7–12",
+        accent: "--older",
+        tint: "--older-tint",
+        words: [
+          { text: "Grumpy girl" }, { text: "Moon Rabbit" }, { text: "Moonbeam" },
+          { text: "Kindness" }, { text: "Flying to the moon" }, { text: "Kind heart" },
+          { text: "Eating steak" }, { text: "Smiling face" }, { text: "Friendship" },
+          { text: "Prince and princess" }, { text: "Treasure other people" }
+        ]
+      }
+    };
+
+    let currentDeck = null;
+    let currentIndex = 0;
+    let done = {};
+
+    const landing = document.getElementById('landing');
+    const game = document.getElementById('game');
+    const wordText = document.getElementById('wordText');
+    const wordIcon = document.getElementById('wordIcon');
+    const categoryLabel = document.getElementById('categoryLabel');
+    const progress = document.getElementById('progress');
+    const doneBadge = document.getElementById('doneBadge');
+    const tickOverlay = document.getElementById('tickOverlay');
+
+    function startGame(key){
+      currentDeck = key;
+      currentIndex = 0;
+      done[key] = done[key] || new Array(decks[key].words.length).fill(false);
+
+      const deck = decks[key];
+      const root = document.documentElement;
+      root.style.setProperty('--accent', getComputedStyle(root).getPropertyValue(deck.accent));
+      root.style.setProperty('--accent-tint', getComputedStyle(root).getPropertyValue(deck.tint));
+
+      categoryLabel.textContent = deck.label;
+      landing.hidden = true;
+      game.hidden = false;
+      render();
+    }
+
+    function goToLanding(){
+      game.hidden = true;
+      landing.hidden = false;
+    }
+
+    function render(){
+      const deck = decks[currentDeck];
+      const item = deck.words[currentIndex];
+      wordText.textContent = item.text;
+      wordIcon.textContent = item.icon || "";
+      progress.textContent = (currentIndex + 1) + " / " + deck.words.length;
+      doneBadge.classList.toggle('show', !!done[currentDeck][currentIndex]);
+      tickOverlay.classList.remove('show');
+    }
+
+    function goNext(){
+      const deck = decks[currentDeck];
+      currentIndex = (currentIndex + 1) % deck.words.length;
+      render();
+    }
+
+    function goPrev(){
+      const deck = decks[currentDeck];
+      currentIndex = (currentIndex - 1 + deck.words.length) % deck.words.length;
+      render();
+    }
+
+    function passCard(){
+      goNext();
+    }
+
+    function markCorrect(){
+      done[currentDeck][currentIndex] = true;
+      doneBadge.classList.add('show');
+      tickOverlay.classList.add('show');
+
+      const allDone = done[currentDeck].every(Boolean);
+
+      setTimeout(() => {
+        if (allDone){
+          document.getElementById('completeModal').hidden = false;
+        } else {
+          goNext();
+        }
+      }, 700);
+    }
+
+    function closeModal(){
+      document.getElementById('completeModal').hidden = true;
+    }
+
+    function restartDeck(){
+      done[currentDeck] = new Array(decks[currentDeck].words.length).fill(false);
+      currentIndex = 0;
+      document.getElementById('completeModal').hidden = true;
+      render();
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (game.hidden) return;
+      if (e.key === 'ArrowRight') goNext();
+      if (e.key === 'ArrowLeft') goPrev();
+      if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); markCorrect(); }
+    });
+  </script>
+
+</body>
+</html>
